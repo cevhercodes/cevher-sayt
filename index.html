@@ -1,20 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Mənim rəngli saytım</title>
-  <style>
-    body {
-      background: linear-gradient(90deg, red, orange, yellow, green, blue);
-      color: white;
-      text-align: center;
-      font-family: Arial;
-      padding-top: 100px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Top Oyunu</title>
+<style>
+body {
+  margin: 0;
+  background: black;
+  overflow: hidden;
+}
+#ball {
+  width: 40px;
+  height: 40px;
+  background: red;
+  border-radius: 50%;
+  position: absolute;
+  top: 100px;
+  left: 100px;
+}
+</style>
 </head>
 <body>
-  <h1>Salam 👋</h1>
-  <p>Bu mənim ilk rəngli saytımdır</p>
+
+<div id="ball"></div>
+
+<script>
+let x = 100;
+let y = 100;
+let dx = 4;
+let dy = 4;
+const ball = document.getElementById("ball");
+
+setInterval(() => {
+  x += dx;
+  y += dy;
+
+  if (x <= 0 || x >= window.innerWidth - 40) dx *= -1;
+  if (y <= 0 || y >= window.innerHeight - 40) dy *= -1;
+
+  ball.style.left = x + "px";
+  ball.style.top = y + "px";
+}, 20);
+</script>
+
 </body>
 </html>
