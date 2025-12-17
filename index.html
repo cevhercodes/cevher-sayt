@@ -1,30 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Top Oyunu</title>
+<style>
+body {
+  margin: 0;
+  background: black;
+  overflow: hidden;
+  font-family: Arial;
+}
+#info {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-size: 20px;
+}
+#ball {
+  width: 40px;
+  height: 40px;
+  background: red;
+  border-radius: 50%;
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  cursor: pointer;
+}
+#restart {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  padding: 15px 25px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="info">
+  Xal: <span id="score">0</span> |
+  Vaxt: <span id="time">30</span>
+</div>
+
+<div id="ball"></div>
+<button id="restart">Təkrar oyna 🔁</button>
+
 <script>
 let score = 0;
 let time = 30;
+let timer;
 
-const info = document.createElement("div");
-info.style.color = "white";
-info.style.fontSize = "20px";
-info.style.position = "fixed";
-info.style.top = "10px";
-info.style.left = "10px";
-info.innerText = "Xal: 0 | Vaxt: 30";
-document.body.appendChild(info);
+// sadə klik səsi (fayl lazım deyil)
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playClickSound() {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = "square";
+  osc.frequency.value = 600;
+  gain.gain.value = 0.1;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.08);
+}
 
+const scoreEl = document.getElementById("score");
+const timeEl = document.getElementById("time");
 const ball = document.getElementById("ball");
+const restartBtn = document.getElementById("restart");
+
+function startGame() {
+  score = 0;
+  time = 30;
+  scoreEl.innerText = score;
+  timeEl.innerText = time;
+  restartBtn.style.display = "none";
+
+  clearInterval(timer);
+  timer = setInterval(() => {
+    time--;
+    timeEl.innerText = time;
+
+    if (time === 0) {
+      clearInterval(timer);
+      restartBtn.style.display = "block";
+    }
+  }, 1000);
+}
 
 ball.onclick = () => {
-  score++;
-  info.innerText = "Xal: " + score + " | Vaxt: " + time;
+  if (time > 0) {
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    playClickSound();
+    score++;
+    scoreEl.innerText = score;
+    ball.style.left = Math.random() * (window.innerWidth - 40) + "px";
+    ball.style.top = Math.random() * (window.innerHeight - 40) + "px";
+  }
 };
 
-const timer = setInterval(() => {
-  time--;
-  info.innerText = "Xal: " + score + " | Vaxt: " + time;
+restartBtn.onclick = () => {
+  startGame();
+};
 
-  if (time <= 0) {
-    clearInterval(timer);
-    alert("Oyun bitdi! Xalın: " + score);
-  }
-}, 1000);
+startGame();
 </script>
+
+</body>
+</html>
