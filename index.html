@@ -1,47 +1,30 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Top Oyunu</title>
-<style>
-body {
-  margin: 0;
-  background: black;
-  overflow: hidden;
-}
-#ball {
-  width: 40px;
-  height: 40px;
-  background: red;
-  border-radius: 50%;
-  position: absolute;
-  top: 100px;
-  left: 100px;
-}
-</style>
-</head>
-<body>
-
-<div id="ball"></div>
-
 <script>
-let x = 100;
-let y = 100;
-let dx = 4;
-let dy = 4;
+let score = 0;
+let time = 30;
+
+const info = document.createElement("div");
+info.style.color = "white";
+info.style.fontSize = "20px";
+info.style.position = "fixed";
+info.style.top = "10px";
+info.style.left = "10px";
+info.innerText = "Xal: 0 | Vaxt: 30";
+document.body.appendChild(info);
+
 const ball = document.getElementById("ball");
 
-setInterval(() => {
-  x += dx;
-  y += dy;
+ball.onclick = () => {
+  score++;
+  info.innerText = "Xal: " + score + " | Vaxt: " + time;
+};
 
-  if (x <= 0 || x >= window.innerWidth - 40) dx *= -1;
-  if (y <= 0 || y >= window.innerHeight - 40) dy *= -1;
+const timer = setInterval(() => {
+  time--;
+  info.innerText = "Xal: " + score + " | Vaxt: " + time;
 
-  ball.style.left = x + "px";
-  ball.style.top = y + "px";
-}, 20);
+  if (time <= 0) {
+    clearInterval(timer);
+    alert("Oyun bitdi! Xalın: " + score);
+  }
+}, 1000);
 </script>
-
-</body>
-</html>
