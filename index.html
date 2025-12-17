@@ -2,114 +2,131 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Top Oyunu</title>
+<title>Labirint Oyunu</title>
 <style>
-body {
-  margin: 0;
-  background: black;
-  overflow: hidden;
-  font-family: Arial;
+body{
+  margin:0; background:#111; font-family:Arial;
+  display:flex; justify-content:center; align-items:center; height:100vh;
 }
-#info {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  color: white;
-  font-size: 20px;
+#wrap{position:relative}
+#hud{
+  position:absolute; top:-40px; left:0; right:0;
+  color:#fff; display:flex; justify-content:space-between; font-size:18px;
 }
-#ball {
-  width: 40px;
-  height: 40px;
-  background: red;
-  border-radius: 50%;
-  position: absolute;
-  top: 100px;
-  left: 100px;
-  cursor: pointer;
+#game{position:relative; width:400px; height:400px; background:#222}
+.wall{position:absolute; background:#c0392b}
+#player{position:absolute; width:20px; height:20px; background:#2ecc71; top:0; left:0}
+#goal{position:absolute; width:20px; height:20px; background:#f1c40f; bottom:0; right:0}
+#restart{
+  display:none; position:absolute; inset:0;
+  background:rgba(0,0,0,.7); color:#fff;
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
 }
-#restart {
-  display: none;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 22px;
-  padding: 15px 25px;
-  cursor: pointer;
-}
+#restart button{font-size:20px; padding:10px 20px; cursor:pointer}
 </style>
 </head>
 
 <body>
+<div id="wrap">
+  <div id="hud">
+    <div>Vaxt: <span id="time">60</span></div>
+    <div>Status: <span id="status">Oynanır</span></div>
+  </div>
 
-<div id="info">
-  Xal: <span id="score">0</span> |
-  Vaxt: <span id="time">30</span>
+  <div id="game">
+    <div id="player"></div>
+    <div id="goal"></div>
+
+    <!-- UZUN LABİRİNT -->
+    <div class="wall" style="top:50px; left:0; width:350px; height:10px"></div>
+    <div class="wall" style="top:100px; left:50px; width:350px; height:10px"></div>
+    <div class="wall" style="top:150px; left:0; width:350px; height:10px"></div>
+    <div class="wall" style="top:200px; left:50px; width:350px; height:10px"></div>
+    <div class="wall" style="top:250px; left:0; width:350px; height:10px"></div>
+    <div class="wall" style="top:300px; left:50px; width:350px; height:10px"></div>
+
+    <div id="restart">
+      <div id="endText"></div>
+      <button onclick="startGame()">Təkrar oyna 🔁</button>
+    </div>
+  </div>
 </div>
 
-<div id="ball"></div>
-<button id="restart">Təkrar oyna 🔁</button>
-
 <script>
-let score = 0;
-let time = 30;
-let timer;
-
-// sadə klik səsi (fayl lazım deyil)
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playClickSound() {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = "square";
-  osc.frequency.value = 600;
-  gain.gain.value = 0.1;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.08);
+// ===== SƏS =====
+const ctx=new (window.AudioContext||window.webkitAudioContext)();
+function beep(f){
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.value=f; g.gain.value=0.1;
+  o.connect(g); g.connect(ctx.destination);
+  o.start(); o.stop(ctx.currentTime+0.1);
 }
 
-const scoreEl = document.getElementById("score");
-const timeEl = document.getElementById("time");
-const ball = document.getElementById("ball");
-const restartBtn = document.getElementById("restart");
+// ===== OYUN =====
+const player=document.getElementById("player");
+const walls=[...document.querySelectorAll(".wall")];
+const goal=document.getElementById("goal");
+const timeEl=document.getElementById("time");
+const statusEl=document.getElementById("status");
+const restartBox=document.getElementById("restart");
+const endText=document.getElementById("endText");
 
-function startGame() {
-  score = 0;
-  time = 30;
-  scoreEl.innerText = score;
-  timeEl.innerText = time;
-  restartBtn.style.display = "none";
+let x=0,y=0,step=10,time=60,timer,playing=true;
 
+function collide(a,b){
+  const A=a.getBoundingClientRect(), B=b.getBoundingClientRect();
+  return !(A.right<=B.left||A.left>=B.right||A.bottom<=B.top||A.top>=B.bottom);
+}
+
+function startGame(){
+  x=0; y=0; time=60; playing=true;
+  player.style.left="0px"; player.style.top="0px";
+  timeEl.textContent=time; statusEl.textContent="Oynanır";
+  restartBox.style.display="none";
   clearInterval(timer);
-  timer = setInterval(() => {
-    time--;
-    timeEl.innerText = time;
-
-    if (time === 0) {
+  timer=setInterval(()=>{
+    if(!playing)return;
+    time--; timeEl.textContent=time;
+    if(time<=0){
+      playing=false; beep(200);
+      statusEl.textContent="Vaxt bitdi";
+      endText.textContent="Vaxt bitdi!";
+      restartBox.style.display="flex";
       clearInterval(timer);
-      restartBtn.style.display = "block";
     }
-  }, 1000);
+  },1000);
 }
 
-ball.onclick = () => {
-  if (time > 0) {
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    playClickSound();
-    score++;
-    scoreEl.innerText = score;
-    ball.style.left = Math.random() * (window.innerWidth - 40) + "px";
-    ball.style.top = Math.random() * (window.innerHeight - 40) + "px";
-  }
-};
+document.addEventListener("keydown",e=>{
+  if(!playing)return;
+  let nx=x, ny=y;
+  if(e.key==="w")ny-=step;
+  if(e.key==="s")ny+=step;
+  if(e.key==="a")nx-=step;
+  if(e.key==="d")nx+=step;
 
-restartBtn.onclick = () => {
-  startGame();
-};
+  const oldX=x, oldY=y;
+  x=nx; y=ny;
+  player.style.left=x+"px"; player.style.top=y+"px";
+
+  for(const w of walls){
+    if(collide(player,w)){
+      x=oldX; y=oldY;
+      player.style.left=x+"px"; player.style.top=y+"px";
+      beep(300);
+    }
+  }
+
+  if(collide(player,goal)){
+    playing=false; beep(800);
+    statusEl.textContent="Qazandın!";
+    endText.textContent="Təbriklər, qazandın!";
+    restartBox.style.display="flex";
+    clearInterval(timer);
+  }
+});
 
 startGame();
 </script>
-
 </body>
 </html>
